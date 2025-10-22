@@ -13,7 +13,7 @@ export const accordion = function (gsapContext) {
   const OPTION_KEEP_ONE_OPEN = 'data-ix-accordion-keep-one-open';
   const OPTION_HOVER_OPEN = 'data-ix-accordion-hover';
   const ACTIVE_CLASS = 'is-active';
-  const accordionLists = gsap.utils.toArray(WRAP);
+  const accordionLists = [...document.querySelectorAll(WRAP)];
 
   // utility function to open or close accordions
   const openAccordion = function (item, open = true) {
@@ -56,9 +56,9 @@ export const accordion = function (gsapContext) {
     let keepOneOpen = attr(false, list.getAttribute(OPTION_KEEP_ONE_OPEN));
     let hoverOnly = attr(false, list.getAttribute(OPTION_HOVER_OPEN));
     //get the first accordion item and all of the items
-    const accordionItems = Array.from(list.querySelectorAll(ITEM));
+    const accordionItems = [...list.querySelectorAll(ITEM)];
     if (accordionItems.length === 0) return;
-    const firstItem = list.firstElementChild;
+    const firstItem = accordionItems[0];
     if (firstOpen) {
       openAccordion(firstItem);
     }

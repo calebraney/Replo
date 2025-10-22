@@ -1,5 +1,9 @@
 import { attr } from './utilities';
+import { initLenis } from './interactions/lenis';
 import { scrollIn } from './interactions/scroll-in';
+import { videoPlyr } from './interactions/video-plyr';
+import { scrolling } from './interactions/scrolling';
+import { countUp } from './interactions/count-up';
 import { marquee } from './interactions/marquee';
 import { sliderComponent } from './interactions/slider';
 import { tabs } from './interactions/tabs';
@@ -18,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
   //////////////////////////////
   //Global Variables
+  let lenis;
 
   //////////////////////////////
   //Control Functions on page load
@@ -34,14 +39,19 @@ document.addEventListener('DOMContentLoaded', function () {
       (gsapContext) => {
         let { isMobile, isTablet, isDesktop, reduceMotion } = gsapContext.conditions;
         //functional interactions
+        lenis = initLenis();
         accordion(gsapContext);
         marquee(gsapContext);
+        countUp(gsapContext);
         sliderComponent();
         tabs();
+
         //conditional interactions
         if (!reduceMotion) {
-          scrollIn(gsapContext);
+          scrolling(gsapContext);
         }
+        //setup video players
+        const [players, components] = [videoPlyr()];
       }
     );
   };

@@ -141,11 +141,12 @@ export const scrollIn = function (gsapContext) {
     //item is the image wrap for this animation
     if (!item) return;
     //set clip path directions
-    const child = item.firstChild;
+    const parent = item.parentElement;
+    //or use .firstChild if applying the attribute to image wrappers
     //create timeline
     const tl = scrollInTL(item);
     tl.fromTo(
-      child,
+      item,
       {
         scale: 1.2,
       },
@@ -155,7 +156,7 @@ export const scrollIn = function (gsapContext) {
       }
     );
     tl.fromTo(
-      item,
+      parent,
       {
         scale: 0.9,
       },
@@ -203,6 +204,7 @@ export const scrollIn = function (gsapContext) {
     // get the children of the item  without display contents
     let children = getNonContentsChildren(item);
     // const children = gsap.utils.toArray(item.children);
+    // console.log(children);
     if (children.length === 0) return;
     const tl = scrollInTL(item);
     const tween = defaultTween(children, tl, { stagger: staggerAmount });
@@ -228,7 +230,9 @@ export const scrollIn = function (gsapContext) {
   };
 
   //get sections
-  const wraps = gsap.utils.toArray(`[${ATTRIBUTE}="${WRAP}"]`);
+  const wraps = [...document.querySelectorAll(`[${ATTRIBUTE}="${WRAP}"]`)];
+  if (wraps.length === 0) return;
+
   wraps.forEach((wrap) => {
     //check breakpoints and exit if set to false
     let runOnBreakpoint = checkBreakpoints(wrap, ANIMATION_ID, gsapContext);
@@ -237,6 +241,7 @@ export const scrollIn = function (gsapContext) {
     //get all items within the section
     const items = [...wrap.querySelectorAll(`[${ATTRIBUTE}]:not([${ATTRIBUTE}-run="false"])`)];
     if (items.length === 0) return;
+    // console.log(items);
     //get all elements and apply animations
     items.forEach((item) => {
       if (!item) return;
