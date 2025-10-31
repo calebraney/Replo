@@ -5,6 +5,7 @@ import { videoPlyr } from './interactions/video-plyr';
 import { scrolling } from './interactions/scrolling';
 import { countUp } from './interactions/count-up';
 import { marquee } from './interactions/marquee';
+import { hoverActive } from './interactions/hover-active';
 import { sliderComponent } from './interactions/slider';
 import { tabs } from './interactions/tabs';
 import { accordion } from './interactions/accordion';
@@ -75,6 +76,7 @@ document.addEventListener('DOMContentLoaded', function () {
         accordion(gsapContext);
         marquee(gsapContext);
         countUp(gsapContext);
+        hoverActive(gsapContext);
         sliderComponent();
         tabs();
         prompt();
