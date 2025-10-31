@@ -11,7 +11,7 @@ import { accordion } from './interactions/accordion';
 
 document.addEventListener('DOMContentLoaded', function () {
   // Comment out for production
-  console.log('Local Script');
+  // console.log('Local Script');
   // register gsap plugins if available
   if (gsap.ScrollTrigger !== undefined) {
     gsap.registerPlugin(ScrollTrigger);
@@ -23,6 +23,39 @@ document.addEventListener('DOMContentLoaded', function () {
   //////////////////////////////
   //Global Variables
   let lenis;
+
+  const prompt = function () {
+    const WRAP = '[data-ix-prompt="wrap"]';
+    const BUTTONS = '[data-ix-prompt="button"]';
+    const TEXT = '[data-ix-prompt="text"]';
+    const SPAN = '[data-ix-prompt="span"]';
+
+    //elements
+    const wrap = [...document.querySelectorALL(WRAP)];
+
+    if (wrap.length === 0) return;
+    wraps.forEach((wrap) => {
+      const span = wrap.querySelector(SPAN);
+      if (!span) return;
+      const buttons = [...wrap.querySelectorAll(BUTTONS)];
+
+      buttons.forEach((button) => {
+        const itemText = button.querySelector(TEXT).textContent;
+        if (!itemText) return;
+
+        button.addEventListener('mouseover', function () {
+          gsap.to(span, {
+            duration: 0.6,
+            text: itemText,
+            ease: 'easeOut',
+          });
+        });
+        // button.addEventListener('mouseout', function () {
+        //   openAccordion(button, false);
+        // });
+      });
+    });
+  };
 
   //////////////////////////////
   //Control Functions on page load
@@ -45,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         countUp(gsapContext);
         sliderComponent();
         tabs();
+        prompt();
 
         //conditional interactions
         if (!reduceMotion) {
