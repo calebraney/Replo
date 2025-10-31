@@ -31,9 +31,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const SPAN = '[data-ix-prompt="span"]';
 
     //elements
-    const wrap = [...document.querySelectorALL(WRAP)];
+    const wraps = [...document.querySelectorALL(WRAP)];
 
-    if (wrap.length === 0) return;
+    if (wraps.length === 0) return;
     wraps.forEach((wrap) => {
       const span = wrap.querySelector(SPAN);
       if (!span) return;
