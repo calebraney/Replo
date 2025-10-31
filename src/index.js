@@ -27,11 +27,10 @@ document.addEventListener('DOMContentLoaded', function () {
   const prompt = function () {
     const WRAP = '[data-ix-prompt="wrap"]';
     const BUTTONS = '[data-ix-prompt="button"]';
-    const TEXT = '[data-ix-prompt="text"]';
     const SPAN = '[data-ix-prompt="span"]';
-
+    const TEXT = '[data-ix-prompt="text"]';
     //elements
-    const wraps = [...document.querySelectorALL(WRAP)];
+    const wraps = [...document.querySelectorAll(WRAP)];
 
     if (wraps.length === 0) return;
     wraps.forEach((wrap) => {
@@ -47,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
           gsap.to(span, {
             duration: 0.6,
             text: itemText,
-            ease: 'easeOut',
+            ease: 'power1.out',
           });
         });
         // button.addEventListener('mouseout', function () {
