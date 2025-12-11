@@ -23,6 +23,7 @@ export const startScroll = function (lenis) {
     body.classList.remove(NO_SCROLL_CLASS);
   }
 };
+
 // attribute value checker
 export const attr = function (defaultVal, attrVal) {
   //get the type of the default
@@ -54,37 +55,46 @@ export const runSplit = function (text, types = 'lines, words') {
   return typeSplit;
 };
 
-//check for attributes to stop animation on specific breakpoints
-export const checkBreakpoints = function (item, animationID, gsapContext) {
-  //exit if items aren't found
-  if (!item || !animationID || !gsapContext) {
-    console.error(`GSAP checkBreakpoints Error in ${animationID}`);
-    // if you want this error to stop the interaction return false
-    return;
+export const checkContainer = function (containerChild, breakpoint, callback, additionalParams) {
+  let containerQuery = breakpoint;
+  //for breakpoint keywords use global breakpoint values.
+  if (breakpoint === 'medium') {
+    containerQuery = '(width < 50em)';
+  } else if (breakpoint === 'small') {
+    containerQuery = '(width < 35em)';
+  } else if (breakpoint === 'xsmall') {
+    containerQuery = '(width < 20em)';
   }
-  //create variables from GSAP context
-  let { isMobile, isTablet, isDesktop, reduceMotion } = gsapContext.conditions;
+  //if no container query is set run the ballback with a match of true.
+  if (containerQuery === 'none') {
+    callback(false, additionalParams);
+  } else {
+    //make a container query and run the callback function.
+    containerChild.observeContainer(containerQuery, (match) => {
+      callback(match, additionalParams);
 
-  //check to see if GSAP context is working
-  if (isMobile === undefined || isTablet === undefined || isDesktop === undefined) {
-    console.error(`GSAP Match Media Conditions Not Defined`);
+      // //Breakpoint tracking
+      // if (match) {
+      //   console.log(match, containerChild);
+      // } else {
+      //   console.log(match, containerChild);
+      // }
+    });
+  }
+};
+
+//check for attributes to stop animation on specific breakpoints
+export const checkRunProp = function (item, animationID) {
+  //exit if items aren't found
+  if (!item || !animationID) {
+    console.error(`GSAP check Run Error in ${animationID}`);
     // if you want this error to stop the interaction return false
     return;
   }
-  //breakpoint options
-  const RUN_DESKTOP = `data-ix-${animationID}-desktop`;
-  const RUN_TABLET = `data-ix-${animationID}-tablet`;
-  const RUN_MOBILE = `data-ix-${animationID}-mobile`;
-  const RUN_ALL = `data-ix-${animationID}-run`;
+  const RUN = `data-ix-${animationID}-run`;
   //check breakpoints and quit function if set on specific breakpoints
-  runAll = attr(true, item.getAttribute(RUN_ALL));
-  runMobile = attr(true, item.getAttribute(RUN_MOBILE));
-  runTablet = attr(true, item.getAttribute(RUN_TABLET));
-  runDesktop = attr(true, item.getAttribute(RUN_DESKTOP));
-  if (runAll === false) return false;
-  if (runMobile === false && isMobile) return false;
-  if (runTablet === false && isTablet) return false;
-  if (runDesktop === false && isDesktop) return false;
+  run = attr(true, item.getAttribute(RUN));
+  if (run === false) return false;
   // if no conditions match
   return true;
 };
@@ -185,3 +195,51 @@ export function getNonContentsChildren(item) {
   processChildren(item);
   return result;
 }
+
+export const copyURL = function () {
+  //get all copy clip elements
+  const elements = [...document.querySelectorAll('[fs-copyclip-text]')];
+  //if the value is set to URL, change the attribute value to the current url.
+  if (elements.length === 0) return;
+  elements.forEach((el) => {
+    const val = el.getAttribute('fs-copyclip-text');
+    if (val === 'url') {
+      el.setAttribute('fs-copyclip-text', window.location.href);
+    }
+  });
+};
+
+//reset gsap on click of reset triggers
+export const scrollReset = function () {
+  //selector
+  const RESET_EL = '[data-ix-reset]';
+  //time option
+  const RESET_TIME = 'data-ix-reset-time';
+  const resetScrollTriggers = document.querySelectorAll(RESET_EL);
+  resetScrollTriggers.forEach(function (item) {
+    item.addEventListener('click', function (e) {
+      //reset scrolltrigger
+      ScrollTrigger.refresh();
+      //if item has reset timer reset scrolltriggers after timer as well.
+      if (item.hasAttribute(RESET_TIME)) {
+        let time = attr(1000, item.getAttribute(RESET_TIME));
+        //get potential timer reset
+        setTimeout(() => {
+          ScrollTrigger.refresh();
+        }, time);
+      }
+    });
+  });
+};
+
+export const updaterFooterYear = function () {
+  // set the fs-hacks selector
+  const YEAR_SELECTOR = '[data-footer-year]';
+  // get the the span element
+  const yearSpan = document.querySelector(YEAR_SELECTOR);
+  if (!yearSpan) return;
+  // get the current year
+  const currentYear = new Date().getFullYear();
+  // set the year span element's text to the current year
+  yearSpan.innerText = currentYear.toString();
+};

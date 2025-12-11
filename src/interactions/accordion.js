@@ -1,6 +1,6 @@
-import { attr, checkBreakpoints } from '../utilities';
+import { attr, checkRunProp, checkContainer } from '../utilities';
 
-export const accordion = function (gsapContext) {
+export const accordion = function () {
   //animation ID
   const ANIMATION_ID = 'accordion';
   //elements
@@ -13,7 +13,7 @@ export const accordion = function (gsapContext) {
   const OPTION_KEEP_ONE_OPEN = 'data-ix-accordion-keep-one-open';
   const OPTION_HOVER_OPEN = 'data-ix-accordion-hover';
   const ACTIVE_CLASS = 'is-active';
-  const accordionLists = [...document.querySelectorAll(WRAP)];
+  const wraps = [...document.querySelectorAll(WRAP)];
 
   // utility function to open or close accordions
   const openAccordion = function (item, open = true) {
@@ -45,26 +45,26 @@ export const accordion = function (gsapContext) {
   };
   ////////////////////////
   // event logic
-  if (accordionLists.length === 0 || accordionLists === undefined) return;
-  accordionLists.forEach((list) => {
-    //check breakpoints and quit function if set on specific breakpoints
-    let runOnBreakpoint = checkBreakpoints(list, ANIMATION_ID, gsapContext);
-    if (runOnBreakpoint === false) return;
+  if (wraps.length === 0 || wraps === undefined) return;
+  wraps.forEach((wrap) => {
+    //check if the run prop is set to true
+    let runProp = checkRunProp(wrap, ANIMATION_ID);
+    if (runProp === false) return;
     // set up conditions for
-    let firstOpen = attr(false, list.getAttribute(OPTION_FIRST_OPEN));
-    let oneActive = attr(false, list.getAttribute(OPTION_ONE_ACTIVE));
-    let keepOneOpen = attr(false, list.getAttribute(OPTION_KEEP_ONE_OPEN));
-    let hoverOnly = attr(false, list.getAttribute(OPTION_HOVER_OPEN));
+    let firstOpen = attr(false, wrap.getAttribute(OPTION_FIRST_OPEN));
+    let oneActive = attr(false, wrap.getAttribute(OPTION_ONE_ACTIVE));
+    let keepOneOpen = attr(false, wrap.getAttribute(OPTION_KEEP_ONE_OPEN));
+    let hoverOnly = attr(false, wrap.getAttribute(OPTION_HOVER_OPEN));
     //get the first accordion item and all of the items
-    const accordionItems = [...list.querySelectorAll(ITEM)];
-    if (accordionItems.length === 0) return;
-    const firstItem = accordionItems[0];
+    const items = [...wrap.querySelectorAll(ITEM)];
+    if (items.length === 0) return;
+    const firstItem = items[0];
     if (firstOpen) {
       openAccordion(firstItem);
     }
     if (!hoverOnly) {
       // Add event listener for when accordion lists are clicked
-      list.addEventListener('click', function (e) {
+      wrap.addEventListener('click', function (e) {
         // check if the clicked element was the top of an accordion and get that accordion
         const clickedEl = e.target.closest(OPEN);
         if (!clickedEl) return;
@@ -77,7 +77,7 @@ export const accordion = function (gsapContext) {
           // check if oneActive is True
           if (oneActive) {
             // if one active is true loop through each item
-            accordionItems.forEach((item) => {
+            items.forEach((item) => {
               //if item is the current item Open
               if (item === clickedItem) {
                 openAccordion(item);
@@ -99,7 +99,7 @@ export const accordion = function (gsapContext) {
         }
         // if the current item IS ACTIVE and keep one open is true check how many items are active
         if (clickedItemAlreadyActive && keepOneActive) {
-          const activeItems = accordionItems.filter(function (item) {
+          const activeItems = items.filter(function (item) {
             return item.classList.contains(activeClass);
           });
           //if there are more than 1 items active close the current one
@@ -110,7 +110,7 @@ export const accordion = function (gsapContext) {
       });
     }
     if (hoverOnly) {
-      accordionItems.forEach((item) => {
+      items.forEach((item) => {
         item.addEventListener('mouseover', function () {
           openAccordion(item);
         });

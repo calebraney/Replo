@@ -1,5 +1,6 @@
 //Setup
-import Lenis from '@studio-freight/lenis';
+import Lenis from 'lenis';
+
 export const initLenis = function () {
   const lenis = new Lenis({
     duration: 0.5,

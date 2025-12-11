@@ -1,6 +1,6 @@
 import { attr } from '../utilities';
 
-export const sliderComponent = function () {
+export const slider = function () {
   //animation ID
   const ANIMATION_ID = 'slider';
   // hero animation attribute
@@ -30,45 +30,37 @@ export const sliderComponent = function () {
     const swiperWrapper = component.querySelector('.slider_list');
     if (!swiperElement || !swiperWrapper) return;
 
-    //if a CMS list is in the slot modify the html to work with a list
+    //remove display contents children
+    function flattenDisplayContents(slot) {
+      if (!slot) return;
+      let child = slot.firstElementChild;
+      while (child && child.classList.contains('u-display-contents')) {
+        while (child.firstChild) {
+          slot.insertBefore(child.firstChild, child);
+        }
+        slot.removeChild(child);
+        child = slot.firstElementChild;
+      }
+    }
+    flattenDisplayContents(swiperWrapper);
+
+    //update cms list structure
     function removeCMSList(slot) {
-      //check if a webflow collection list wrapper element is inside the slider
       const dynList = Array.from(slot.children).find((child) =>
         child.classList.contains('w-dyn-list')
       );
       if (!dynList) return;
-      //get the collection list item elements
-      const newSlides = dynList?.firstElementChild?.children;
-      if (!newSlides) return;
-      //get all direct children of the slot
-      const slotChildren = [...slot.children];
-      //move the children of each card into the slide
-      [...newSlides].forEach(
-        (el) => el.firstElementChild && slot.appendChild(el.firstElementChild)
-      );
-      // delete the previous direct children of the slot
-      slotChildren.forEach((el) => el.remove());
-    }
-    function removeDisplayContents(slot) {
-      //check if an element with display contents is a direct child of the slider slot
-      const childWithDisplayContents = Array.from(slot.children).find((child) =>
-        child.classList.contains('u-display-contents')
-      );
-      if (!childWithDisplayContents) return;
-      //get get the new slides
-      const newSlides = childWithDisplayContents?.children;
-      if (!newSlides) return;
-      //get all direct children of the slot
-      const slotChildren = [...slot.children];
-      //move the slides directly into the slot.
-      [...newSlides].forEach((el) => slot.appendChild(el));
-      // delete the previous direct children of the slot
-      slotChildren.forEach((el) => el.remove());
+      const nestedItems = dynList?.querySelector('.w-dyn-items')?.children;
+      if (!nestedItems) return;
+      const staticWrapper = [...slot.children];
+      [...nestedItems].forEach((el) => {
+        const c = [...el.children].find((c) => !c.classList.contains('w-condition-invisible'));
+        c && slot.appendChild(c);
+      });
+      staticWrapper.forEach((el) => el.remove());
     }
     removeCMSList(swiperWrapper);
-    removeDisplayContents(swiperWrapper);
 
-    //add slide classes to the children
     [...swiperWrapper.children].forEach((el) => el.classList.add('swiper-slide'));
     const followFinger = attr(true, swiperElement.getAttribute(FOLLOW_FINGER));
     const freeMode = attr(true, swiperElement.getAttribute(FREE_MODE));

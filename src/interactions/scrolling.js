@@ -1,19 +1,18 @@
-import { attr, attrIfSet, checkBreakpoints, getClipDirection } from '../utilities';
+import { attr, attrIfSet, checkRunProp, getClipDirection, checkContainer } from '../utilities';
 
-export const scrolling = function (gsapContext) {
+export const scrolling = function () {
   //animation ID
   const ANIMATION_ID = 'scrolling';
   //elements
   const WRAP = `[data-ix-scrolling="wrap"]`;
   const TRIGGER = `[data-ix-scrolling="trigger"]`;
-  const LAYER = '[data-ix-scrolling="layer"]';
+  const ITEM = '[data-ix-scrolling="item"]';
   //timeline options
   const START = 'data-ix-scrolling-start';
   const END = 'data-ix-scrolling-end';
-  const TABLET_START = 'data-ix-scrolling-start-tablet';
-  const TABLET_END = 'data-ix-scrolling-end-tablet';
-  const MOBILE_START = 'data-ix-scrolling-start-mobile';
-  const MOBILE_END = 'data-ix-scrolling-end-mobile';
+  const BREAKPOINT = 'data-ix-scrolling-breakpoint'; // use medium small or xsmall to define the lower breakpoint and seperate start and end values
+  const BREAKPOINT_START = 'data-ix-scrolling-start-breakpoint';
+  const BREAKPOINT_END = 'data-ix-scrolling-end-breakpoint';
   const SCRUB = 'data-ix-scrolling-scrub';
   //tween options
   const POSITION = 'data-ix-scrolling-position'; // sequential by default, use "<" to start tweens together
@@ -46,110 +45,107 @@ export const scrolling = function (gsapContext) {
   const CLIP_START = 'data-ix-scrolling-clip-start';
   const CLIP_END = 'data-ix-scrolling-clip-end';
 
-  const scrollingItems = gsap.utils.toArray(WRAP);
-  scrollingItems.forEach((scrollingItem) => {
-    const layers = scrollingItem.querySelectorAll(LAYER);
+  const wraps = gsap.utils.toArray(WRAP);
+  wraps.forEach((wrap) => {
+    const items = wrap.querySelectorAll(ITEM);
+
     // return if items are null
-    if (!scrollingItem || layers.length === 0) return;
+    if (!wrap || items.length === 0) return;
     // find the target element if one exists, otherwise the parent is the target
-    let trigger = scrollingItem.querySelector(TRIGGER);
+    let trigger = wrap.querySelector(TRIGGER);
     if (!trigger) {
-      trigger = scrollingItem;
+      trigger = wrap;
     }
-    //check breakpoints and quit function if set on specific breakpoints
-    let runOnBreakpoint = checkBreakpoints(scrollingItem, ANIMATION_ID, gsapContext);
-    if (runOnBreakpoint === false) return;
-    //create variables from GSAP context
-    let { isMobile, isTablet, isDesktop, reduceMotion } = gsapContext.conditions;
+    const animation = function (smallBreakpoint) {
+      // default GSAP options for animation
+      const tlSettings = {
+        scrub: 0.5,
+        start: 'top bottom',
+        end: 'bottom top',
+        ease: 'none',
+      };
+      // get custom timeline settings or set them at the default
+      tlSettings.start = attr(tlSettings.start, wrap.getAttribute(START));
+      tlSettings.end = attr(tlSettings.end, wrap.getAttribute(END));
+      tlSettings.scrub = attr(tlSettings.scrub, wrap.getAttribute(SCRUB));
+      tlSettings.ease = attr(tlSettings.ease, wrap.getAttribute(EASE));
 
-    // default GSAP options for animation
-    const tlSettings = {
-      scrub: 0.5,
-      start: 'top bottom',
-      end: 'bottom top',
-      ease: 'none',
+      //conditionally update lower breakpoint start and end values.
+      if (smallBreakpoint && wrap.getAttribute(BREAKPOINT_START)) {
+        tlSettings.start = attr(tlSettings.start, wrap.getAttribute(BREAKPOINT_START));
+      }
+      if (smallBreakpoint && wrap.getAttribute(BREAKPOINT_END)) {
+        tlSettings.start = attr(tlSettings.start, wrap.getAttribute(BREAKPOINT_END));
+      }
+
+      // create timeline
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: trigger,
+          start: tlSettings.start,
+          end: tlSettings.end,
+          scrub: tlSettings.scrub,
+          markers: false,
+        },
+        defaults: {
+          duration: 1,
+          ease: tlSettings.ease,
+        },
+      });
+      //////////////////////
+      // Adding tweens
+      items.forEach((item) => {
+        if (!item) return;
+        //objects for tween
+        const varsFrom = {};
+        const varsTo = {};
+
+        //add properties to vars objects
+        varsFrom.x = attrIfSet(item, X_START, '0%');
+        varsTo.x = attrIfSet(item, X_END, '0%');
+        varsFrom.y = attrIfSet(item, Y_START, '0%');
+        varsTo.y = attrIfSet(item, Y_END, '0%');
+        varsFrom.scale = attrIfSet(item, SCALE_START, 1);
+        varsTo.scale = attrIfSet(item, SCALE_END, 1);
+        varsFrom.scaleX = attrIfSet(item, SCALE_X_START, 1);
+        varsTo.scaleX = attrIfSet(item, SCALE_X_END, 1);
+        varsFrom.scaleY = attrIfSet(item, SCALE_Y_START, 1);
+        varsTo.scaleY = attrIfSet(item, SCALE_Y_END, 1);
+        varsFrom.width = attrIfSet(item, WIDTH_START, '0%');
+        varsTo.width = attrIfSet(item, WIDTH_END, '0%');
+        varsFrom.height = attrIfSet(item, HEIGHT_START, '0%');
+        varsTo.height = attrIfSet(item, HEIGHT_END, '0%');
+        varsFrom.rotateX = attrIfSet(item, ROTATE_X_START, 0);
+        varsTo.rotateX = attrIfSet(item, ROTATE_X_END, 0);
+        varsFrom.rotateY = attrIfSet(item, ROTATE_Y_START, 0);
+        varsTo.rotateY = attrIfSet(item, ROTATE_Y_END, 0);
+        varsFrom.rotateZ = attrIfSet(item, ROTATE_Z_START, 0);
+        varsTo.rotateZ = attrIfSet(item, ROTATE_Z_END, 0);
+        varsFrom.opacity = attrIfSet(item, OPACITY_START, 0);
+        varsTo.opacity = attrIfSet(item, OPACITY_END, 0);
+        varsFrom.borderRadius = attrIfSet(item, RADIUS_START, 'string');
+        varsTo.borderRadius = attrIfSet(item, RADIUS_END, 'string');
+        //get clip path values (and allow keyword names light right, or full)
+        const clipStart = attrIfSet(item, CLIP_START, 'left');
+        const clipEnd = attrIfSet(item, CLIP_END, 'full');
+        //convert keyword names into actual clip values
+        varsFrom.clipPath = getClipDirection(clipStart);
+        varsTo.clipPath = getClipDirection(clipEnd);
+
+        // get the position attribute
+        const position = attr('<', item.getAttribute(POSITION));
+        varsTo.duration = attr(1, item.getAttribute(DURATION));
+        varsTo.ease = attr(item, EASE, 'none');
+
+        //add tween
+        let tween = tl.fromTo(item, varsFrom, varsTo, position);
+      });
     };
-    // get custom timeline settings or set them at the default
-    tlSettings.start = attr(tlSettings.start, scrollingItem.getAttribute(START));
-    tlSettings.end = attr(tlSettings.end, scrollingItem.getAttribute(END));
-    tlSettings.scrub = attr(tlSettings.scrub, scrollingItem.getAttribute(SCRUB));
-    tlSettings.ease = attr(tlSettings.ease, scrollingItem.getAttribute(EASE));
-
-    //conditionally update tablet and mobile values
-    if (isTablet && scrollingItem.getAttribute(TABLET_START)) {
-      tlSettings.start = attr(tlSettings.start, scrollingItem.getAttribute(TABLET_START));
-    }
-    if (isTablet && scrollingItem.getAttribute(TABLET_END)) {
-      tlSettings.start = attr(tlSettings.start, scrollingItem.getAttribute(TABLET_END));
-    }
-    if (isMobile && scrollingItem.getAttribute(MOBILE_START)) {
-      tlSettings.start = attr(tlSettings.start, scrollingItem.getAttribute(MOBILE_START));
-    }
-    if (isMobile && scrollingItem.getAttribute(MOBILE_END)) {
-      tlSettings.start = attr(tlSettings.start, scrollingItem.getAttribute(MOBILE_END));
-    }
-    // create timeline
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: trigger,
-        start: tlSettings.start,
-        end: tlSettings.end,
-        scrub: tlSettings.scrub,
-        markers: false,
-      },
-      defaults: {
-        duration: 1,
-        ease: tlSettings.ease,
-      },
-    });
-    //////////////////////
-    // Adding tweens
-    layers.forEach((layer) => {
-      if (!layer) return;
-      //objects for tween
-      const varsFrom = {};
-      const varsTo = {};
-
-      //add properties to vars objects
-      varsFrom.x = attrIfSet(layer, X_START, '0%');
-      varsTo.x = attrIfSet(layer, X_END, '0%');
-      varsFrom.y = attrIfSet(layer, Y_START, '0%');
-      varsTo.y = attrIfSet(layer, Y_END, '0%');
-      varsFrom.scale = attrIfSet(layer, SCALE_START, 1);
-      varsTo.scale = attrIfSet(layer, SCALE_END, 1);
-      varsFrom.scaleX = attrIfSet(layer, SCALE_X_START, 1);
-      varsTo.scaleX = attrIfSet(layer, SCALE_X_END, 1);
-      varsFrom.scaleY = attrIfSet(layer, SCALE_Y_START, 1);
-      varsTo.scaleY = attrIfSet(layer, SCALE_Y_END, 1);
-      varsFrom.width = attrIfSet(layer, WIDTH_START, '0%');
-      varsTo.width = attrIfSet(layer, WIDTH_END, '0%');
-      varsFrom.height = attrIfSet(layer, HEIGHT_START, '0%');
-      varsTo.height = attrIfSet(layer, HEIGHT_END, '0%');
-      varsFrom.rotateX = attrIfSet(layer, ROTATE_X_START, 0);
-      varsTo.rotateX = attrIfSet(layer, ROTATE_X_END, 0);
-      varsFrom.rotateY = attrIfSet(layer, ROTATE_Y_START, 0);
-      varsTo.rotateY = attrIfSet(layer, ROTATE_Y_END, 0);
-      varsFrom.rotateZ = attrIfSet(layer, ROTATE_Z_START, 0);
-      varsTo.rotateZ = attrIfSet(layer, ROTATE_Z_END, 0);
-      varsFrom.opacity = attrIfSet(layer, OPACITY_START, 0);
-      varsTo.opacity = attrIfSet(layer, OPACITY_END, 0);
-      varsFrom.borderRadius = attrIfSet(layer, RADIUS_START, 'string');
-      varsTo.borderRadius = attrIfSet(layer, RADIUS_END, 'string');
-      //get clip path values (and allow keyword names light right, or full)
-      const clipStart = attrIfSet(layer, CLIP_START, 'left');
-      const clipEnd = attrIfSet(layer, CLIP_END, 'full');
-      //convert keyword names into actual clip values
-      varsFrom.clipPath = getClipDirection(clipStart);
-      varsTo.clipPath = getClipDirection(clipEnd);
-
-      // get the position attribute
-      const position = attr('<', layer.getAttribute(POSITION));
-      const duration = attr(1, layer.getAttribute(DURATION));
-
-      varsTo.ease = attr(layer, EASE, 'none');
-
-      //add tween
-      let tween = tl.fromTo(layer, varsFrom, varsTo, position);
-    });
+    //check if the run prop is set to true
+    let runProp = checkRunProp(wrap, ANIMATION_ID);
+    if (runProp === false) return;
+    //check container breakpoint and run callback.
+    const breakpoint = attr('none', wrap.getAttribute(`data-ix-${ANIMATION_ID}-breakpoint`));
+    checkContainer(items[0], breakpoint, animation);
   });
 };

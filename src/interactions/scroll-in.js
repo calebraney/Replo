@@ -1,6 +1,12 @@
-import { attr, checkBreakpoints, getNonContentsChildren, getClipDirection } from '../utilities';
+import {
+  attr,
+  checkRunProp,
+  getNonContentsChildren,
+  getClipDirection,
+  checkContainer,
+} from '../utilities';
 
-export const scrollIn = function (gsapContext) {
+export const scrollIn = function () {
   //animation ID
   const ANIMATION_ID = 'scrollin';
   // selectors
@@ -204,7 +210,6 @@ export const scrollIn = function (gsapContext) {
     // get the children of the item  without display contents
     let children = getNonContentsChildren(item);
     // const children = gsap.utils.toArray(item.children);
-    // console.log(children);
     if (children.length === 0) return;
     const tl = scrollInTL(item);
     const tween = defaultTween(children, tl, { stagger: staggerAmount });
@@ -234,40 +239,55 @@ export const scrollIn = function (gsapContext) {
   if (wraps.length === 0) return;
 
   wraps.forEach((wrap) => {
-    //check breakpoints and exit if set to false
-    let runOnBreakpoint = checkBreakpoints(wrap, ANIMATION_ID, gsapContext);
-    if (runOnBreakpoint === false && wrap.getAttribute('data-ix-load-run') === 'false') return;
+    //check if the run prop is set to true
+    let runProp = checkRunProp(wrap, ANIMATION_ID);
+    if (runProp === false) return;
 
     //get all items within the section
     const items = [...wrap.querySelectorAll(`[${ATTRIBUTE}]:not([${ATTRIBUTE}-run="false"])`)];
     if (items.length === 0) return;
-    // console.log(items);
-    //get all elements and apply animations
-    items.forEach((item) => {
-      if (!item) return;
-      //find the type of the scrolling animation
-      const scrollInType = item.getAttribute(ELEMENT);
-      if (scrollInType === HEADING) {
-        scrollInHeading(item);
-      }
-      if (scrollInType === ITEM) {
-        scrollInItem(item);
-      }
-      if (scrollInType === IMAGE) {
-        scrollInImage(item);
-      }
-      if (scrollInType === LINE) {
-        scrollInLine(item);
-      }
-      if (scrollInType === CONTAINER) {
-        scrollInContainer(item);
-      }
-      if (scrollInType === STAGGER) {
-        scrollInStagger(item);
-      }
-      if (scrollInType === RICH_TEXT) {
-        scrollInRichText(item);
-      }
-    });
+    //function to apply animations
+    const animation = function (smallBreakpoint) {
+      // Could run a return if you didn't want the animations to run on smaller breakpoints.
+      // if (smallBreakpoint) return;
+
+      //get all elements and apply animations
+      items.forEach((item) => {
+        if (!item) return;
+        //find the type of the scrolling animation
+        const scrollInType = item.getAttribute(ELEMENT);
+        if (scrollInType === HEADING) {
+          scrollInHeading(item);
+          // //if on small breakpoint use item animation for headings.
+          // if (smallBreakpoint) {
+          //   scrollInItem(item);
+          // } else {
+          //   scrollInHeading(item);
+          // }
+        }
+        if (scrollInType === ITEM) {
+          scrollInItem(item);
+        }
+        if (scrollInType === IMAGE) {
+          scrollInImage(item);
+        }
+        if (scrollInType === LINE) {
+          scrollInLine(item);
+        }
+        if (scrollInType === CONTAINER) {
+          scrollInContainer(item);
+        }
+        if (scrollInType === STAGGER) {
+          scrollInStagger(item);
+        }
+        if (scrollInType === RICH_TEXT) {
+          scrollInRichText(item);
+        }
+      });
+    };
+    animation();
+    // // Alternatively, check container breakpoint and run callback.
+    // const breakpoint = attr('small', wrap.getAttribute(`data-ix-${ANIMATION_ID}-breakpoint`));
+    // checkContainer(items[0], breakpoint, animation);
   });
 };

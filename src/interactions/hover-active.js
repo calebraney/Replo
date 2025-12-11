@@ -1,6 +1,6 @@
-import { attr, checkBreakpoints } from '../utilities';
+import { attr, checkRunProp, checkContainer } from '../utilities';
 
-export const hoverActive = function (gsapContext) {
+export const hoverActive = function () {
   //animation ID
   const ANIMATION_ID = 'hoveractive';
   //elements
@@ -69,8 +69,9 @@ export const hoverActive = function (gsapContext) {
   //if wraps exist run on each wrap, otherwise run on the body
   if (wraps.length >= 0) {
     wraps.forEach((wrap) => {
-      let runOnBreakpoint = checkBreakpoints(wrap, ANIMATION_ID, gsapContext);
-      if (runOnBreakpoint === false) return;
+      //check if the run prop is set to true
+      let runProp = checkRunProp(wrap, ANIMATION_ID);
+      if (runProp === false) return;
       hoverActiveList(wrap);
     });
   } else {

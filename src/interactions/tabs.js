@@ -15,6 +15,7 @@ export const tabs = function () {
   const AUTOPLAY = 'data-ix-tabs-autoplay-duration';
   const DURATION = 'data-ix-tabs-duration';
   const PAUSE_ON_HOVER = 'data-ix-tabs-pause-on-hover';
+  const AUTOPLAYVIDEOS = 'data-ix-tabs-autoplay-videos'; // ADDED
   const EASE = 'data-ix-tabs-ease';
 
   //select all the wrap elements
@@ -22,13 +23,13 @@ export const tabs = function () {
   if (tabWraps.length === 0) return;
   //for each tabs elements
   tabWraps.forEach((tabWrap, componentIndex) => {
-    console.log(tabWrap);
     //get options
     let loopControls = attr(true, tabWrap.getAttribute(LOOP_CONTROLS));
     let slideTabs = attr(false, tabWrap.getAttribute(SLIDE_TABS));
     let autoplay = attr(0, tabWrap.getAttribute(AUTOPLAY));
     let duration = attr(0.2, tabWrap.getAttribute(DURATION));
     let pauseOnHover = attr(false, tabWrap.getAttribute(PAUSE_ON_HOVER));
+    let autoplayVideos = attr(false, tabWrap.getAttribute(AUTOPLAYVIDEOS));
     let ease = attr('power1.out', tabWrap.getAttribute(EASE));
 
     //get elements
@@ -95,8 +96,19 @@ export const tabs = function () {
     panelItems.forEach((panel) => panel.setAttribute('role', 'tabpanel'));
 
     let activeIndex = 0;
+    //function to active tab panel
     const makeActive = (index, focus = false, animate = true, pause = true) => {
       if (animating) return;
+
+      //Pause videos inside the previously active panel when panels are changed
+      const previousPanel = panelItems[activeIndex];
+      if (previousPanel) {
+        const videos = previousPanel.querySelectorAll('video');
+        videos.forEach((video) => {
+          if (!video.paused) video.pause();
+        });
+      }
+
       buttonItems.forEach((btn, i) => {
         btn.classList.toggle('is-active', i === index);
         btn.setAttribute('aria-selected', i === index ? 'true' : 'false');
@@ -106,10 +118,26 @@ export const tabs = function () {
       if (nextButton) nextButton.disabled = index === buttonItems.length - 1 && !loopControls;
       if (previousButton) previousButton.disabled = index === 0 && !loopControls;
       if (focus) buttonItems[index].focus();
-      const previousPanel = panelItems[activeIndex];
+      // moved previousPanel declaration earlier so video-pause can run
+      // const previousPanel = panelItems[activeIndex];
       const currentPanel = panelItems[index];
       let direction = 1;
       if (activeIndex > index) direction = -1;
+      // If Autoplay Videos is set to true play videos inside the active panel when it becomes active.
+      if (autoplayVideos && currentPanel) {
+        const currentVideos = currentPanel.querySelectorAll('video');
+        currentVideos.forEach((video) => {
+          // Only play if video is allowed to autoplay and user interaction rules do not block it
+          if (video.paused) {
+            const playPromise = video.play();
+            if (playPromise instanceof Promise) {
+              playPromise.catch(() => {
+                // autoplay was prevented — do nothing, fail silently
+              });
+            }
+          }
+        });
+      }
 
       if (typeof gsap !== 'undefined' && animate && activeIndex !== index) {
         if (autoplayTl && !canPlay && typeof autoplayTl.restart === 'function') {
@@ -121,7 +149,7 @@ export const tabs = function () {
             animating = false;
             if (typeof ScrollTrigger !== 'undefined') ScrollTrigger.refresh();
           },
-          defaults: { duration: duration, ease: 'power1.out' },
+          defaults: { duration: duration, ease: ease },
         });
         if (slideTabs) {
           tl.set(currentPanel, { display: 'block', position: 'relative' });
