@@ -14,6 +14,7 @@ import { countUp } from './interactions/count-up';
 import { marquee } from './interactions/marquee';
 import { hoverActive } from './interactions/hover-active';
 import { slider } from './interactions/slider';
+import { load } from './interactions/load';
 import { tabs } from './interactions/tabs';
 import { accordion } from './interactions/accordion';
 
